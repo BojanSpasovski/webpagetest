@@ -2,12 +2,21 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../util.inc';
 require_once __DIR__ . '/../common.inc';
 
 use WebPageTest\Util;
 use WebPageTest\Template;
 use WebPageTest\Exception\ClientException;
+
+if (!Util::getSetting('cp_auth')) {
+    $protocol = $request_context->getUrlProtocol();
+    $host = Util::getSetting('host');
+    $route = '/';
+    $redirect_uri = "{$protocol}://{$host}{$route}";
+
+    header("Location: {$redirect_uri}");
+    exit();
+}
 
 $request_method = strtoupper($_SERVER['REQUEST_METHOD']);
 
@@ -23,7 +32,7 @@ if ($request_method === 'POST') {
         $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
         $password = filter_input(INPUT_POST, 'password');
     } catch (Exception $e) {
-        error_log("Incorrect CSRF token");
+        error_log("Password or email missing");
         throw new ClientException($e->getMessage(), "/login", 400);
     }
 
@@ -34,7 +43,7 @@ if ($request_method === 'POST') {
         throw new ClientException($e->getMessage(), "/login", 403);
     }
 
-    $protocol = getUrlProtocol();
+    $protocol = $request_context->getUrlProtocol();
     $host = Util::getSetting('host');
     setcookie('cp_access_token', $auth_token->access_token, time() + $auth_token->expires_in, "/", $host);
     setcookie('cp_refresh_token', $auth_token->refresh_token, time() + 60 * 60 * 24 * 30, "/", $host);
@@ -47,6 +56,12 @@ if ($request_method === 'POST') {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(35));
     $error = $_SESSION['error_message'] ?? "";
     unset($_SESSION['error_message']);
+
+    if ($request_context->getUser() && $request_context->getUser()->getUserId() && isset($_GET["redirect_uri"])) {
+        $redirect_uri = htmlspecialchars($_GET["redirect_uri"]);
+        header("Location: {$redirect_uri}");
+        exit();
+    }
 
     $tpl = new Template('account');
     $tpl->setLayout('headless');

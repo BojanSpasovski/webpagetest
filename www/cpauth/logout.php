@@ -9,12 +9,25 @@ use WebPageTest\Util;
 
 $request_method = strtoupper($_SERVER['REQUEST_METHOD']);
 
+if (!Util::getSetting('cp_auth')) {
+    $protocol = $request_context->getUrlProtocol();
+    $host = Util::getSetting('host');
+    $route = '/';
+    $redirect_uri = "{$protocol}://{$host}{$route}";
+
+    header("Location: {$redirect_uri}");
+    exit();
+}
+
 if ($request_method === 'POST') {
-    $protocol = getUrlProtocol();
+    $protocol = $request_context->getUrlProtocol();
     $host = Util::getSetting('host');
 
     $access_token = $request_context->getUser()->getAccessToken();
-    $request_context->getClient()->revokeToken($access_token);
+    try {
+        $request_context->getClient()->revokeToken($access_token);
+    } catch (Exception $e) {
+    }
 
     setcookie("cp_access_token", "", time() - 3600, "/", $host);
     setcookie("cp_refresh_token", "", time() - 3600, "/", $host);

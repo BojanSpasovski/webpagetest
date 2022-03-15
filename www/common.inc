@@ -3,19 +3,14 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
+
 // Load app and composer-based dependencies
 require_once(__DIR__ . '/../vendor/autoload.php');
-
-// Load local deps
-require_once(__DIR__ . '/common_lib.inc');
-require_once(__DIR__ . '/plugins.php.inc');
-require_once(__DIR__ . '/util.inc');
 
 use WebPageTest\Util;
 use WebPageTest\User;
 use WebPageTest\RequestContext;
 use WebPageTest\Exception\ClientException;
-
 
 if (Util::getSetting('cp_auth')) {
   // Start session handling for this request
@@ -27,13 +22,25 @@ if (Util::getSetting('cp_auth')) {
     if(is_a($e, ClientException::class)) {
       $route = $e->getRoute();
       $message = $e->getMessage();
+      $host = Util::getSetting('host');
       $_SESSION['error_message'] = $message;
-      header('HTTP/1.1 302 Found');
-      header('Location: ' . $route);
-      exit(0);
+      $protocol = "https";
+      $location = "{$protocol}://{$host}{$route}";
+      header('Location: ' . $location);
+      exit();
     }
+    var_dump($e);
+    exit();
   });
 }
+
+// Load local deps
+require_once(__DIR__ . '/common_lib.inc');
+require_once(__DIR__ . '/plugins.php.inc');
+require_once(__DIR__ . '/util.inc');
+
+// Create global request context for future use
+$request_context = new RequestContext($_REQUEST, $_SERVER);
 
 // Disable caching by default
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0", true);
@@ -415,8 +422,6 @@ if (is_file('./settings/custom_common.inc.php')) {
     include('./settings/custom_common.inc.php');
 }
 
-// Create global request context for future use
-$request_context = new RequestContext($_REQUEST);
 if ($supportsSaml && !$supportsCPAuth) {
   $request_context->setUser($saml_user);
 }

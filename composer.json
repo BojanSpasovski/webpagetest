@@ -7,13 +7,14 @@
         "phpunit/phpunit": "^9"
     },
     "scripts": {
-      "test": "phpunit --configuration tests/phpunit.xml",
-      "lint": "phpcs --standard=PSR12 www/src www/cpauth",
-      "format": "phpcbf --standard=PSR12 www/src www/cpauth"
+        "test": "phpunit --configuration tests/phpunit.xml",
+        "lint": "phpcs --standard=PSR12 www/src www/cpauth",
+        "format": "phpcbf --standard=PSR12 www/src www/cpauth"
     },
     "require": {
-        "guzzlehttp/guzzle": "^7.4",
+        "braintree/braintree_php": "^6.7",
         "gmostafa/php-graphql-client": "^1.13",
+        "guzzlehttp/guzzle": "^7.4",
         "php": "^7.4.0"
     }
 }
