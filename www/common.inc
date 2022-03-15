@@ -29,7 +29,7 @@ if (Util::getSetting('cp_auth')) {
       header('Location: ' . $location);
       exit();
     }
-    var_dump($e);
+    throw $e;
     exit();
   });
 }
